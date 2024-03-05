@@ -1,5 +1,6 @@
 import re
-from parse_table import *
+# from parse_table import *
+from table import *
 
 def read_grammar(filename):
     productions = {}
@@ -77,7 +78,7 @@ def compute_follow(productions, first_set):
 if __name__ == "__main__":
 
     # Read the grammar from the file
-    grammar_file = "grammar2.txt"
+    grammar_file = "grammar4.txt"
     productions = read_grammar(grammar_file)
     print(productions)
     first=compute_first(productions)
@@ -87,4 +88,4 @@ if __name__ == "__main__":
     follow=compute_follow(productions,first)
     print(follow)
 
-    build_parse_tree(productions,first,follow)
+    parser(productions,first,follow)
