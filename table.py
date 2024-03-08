@@ -1,9 +1,35 @@
+import pandas as pd
+from tabulate import tabulate
+import sys
 def parser(productions,first_set,follow_set):
+    parse_table = {}  
+    data = {}
+    non_terminals = list(productions.keys())
+    terminals = set()
+
+    for non_terminal,production in productions.items():
+        for rule in production:
+            for symbol in rule:
+                if symbol not in first_set:
+                    terminals.add(symbol)
+    terminals.add('$')
+    terminals.remove('@')
+    terminals = sorted(list(terminals))
+
+    for terminal in terminals:
+        data[terminal] = {non_terminal: '' for non_terminal in non_terminals}
+
+    for non_terminal, table in parse_table.items():
+        for terminal, rule in table.items():
+            data[terminal][non_terminal] = rule
+
+    df = pd.DataFrame(data)
 
     for non_terminal, production in productions.items():
-        print(non_terminal,' :')
+        parse_table[non_terminal]={}
         for rule in production:
             pos=0
+            parse_table[non_terminal][rule]=set()
             first=set()
             while pos<=len(rule)-1:
                 if rule[pos] not in first_set :
@@ -13,7 +39,6 @@ def parser(productions,first_set,follow_set):
                         first.add(rule[pos])
                     break
                 first_of_next = first_set[rule[pos]]
-                # print(first_of_next)
                 first.update(first_of_next - {'@'})
                 if '@' in first_set[rule[pos]]:
                     pos+=1
@@ -24,22 +49,19 @@ def parser(productions,first_set,follow_set):
                     first.add(rule[pos])
                 else:
                     first.add(follow_set(rule[pos]))
-            print(rule,' -> ',first)
+            parse_table[non_terminal][rule].update(first)
 
+            for t in first:
+                if df.at[non_terminal,t] == "":
+                    df.at[non_terminal, t] = rule
+                else:
+                    print(f"Conflict at {non_terminal} - {t}. Grammar is not LL1. Please resolve conflicts.")
+                    sys.exit(1)   
 
-START_SYMBOL='E'
-# productions={'S': ['(L)', 'a'], 'L': ['SP'], 'P': ['@', ',SP']}
-# first_set={'S': {'a', '('}, 'L': {'a', '('}, 'P': {'@', ','}}
-# follow_set={'S': {',', ')', '$'}, 'L': {')'}, 'P': {')'}}  
-
-
-# productions={'S': ['aSbS', 'bSaS', '@']}
-# first_set={'S': {'@', 'a', 'b'}}
-# follow_set={'S': {'a', 'b', '$'}}
-
-# productions={'E': ['TF'], 'F': ['+TF', '@'], 'T': ['GH'], 'H': ['*GH', '@'], 'G': ['a', '(E)']}
-# first_set={'E': {'a', '('}, 'F': {'@', '+'}, 'T': {'a', '('}, 'H': {'*', '@'}, 'G': {'a', '('}}
-# follow_set={'E': {')', '$'}, 'F': {')', '$'}, 'T': {')', '$', '+'}, 'H': {')', '$', '+'}, 'G': {'*', ')', 
-# '$', '+'}}
-
-# parser(productions,first_set,follow_set)
+    print('-------------------------------------------------------------------------------------------------------')
+    print('Parsing Table')
+    print('-------------------------------------------------------------------------------------------------------')
+    print("\n")   
+    print(tabulate(df, headers='keys', tablefmt='grid'))
+    print("\n")   
+    return parse_table 

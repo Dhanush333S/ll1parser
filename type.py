@@ -1,6 +1,7 @@
 import re
 # from parse_table import *
 from table import *
+from Application import *
 
 def read_grammar(filename):
     productions = {}
@@ -78,7 +79,7 @@ def compute_follow(productions, first_set):
 if __name__ == "__main__":
 
     # Read the grammar from the file
-    grammar_file = "grammar4.txt"
+    grammar_file = "grammar3.txt"
     productions = read_grammar(grammar_file)
     print(productions)
     first=compute_first(productions)
@@ -88,4 +89,10 @@ if __name__ == "__main__":
     follow=compute_follow(productions,first)
     print(follow)
 
-    parser(productions,first,follow)
+    parse_table=parser(productions,first,follow)
+
+    while (True):
+        s=str(input("Enter input string (-1 to stop) :"))
+        if(s=="-1"):
+            break
+        apply_ll1_parser(s,START_SYMBOL,first,parse_table)
